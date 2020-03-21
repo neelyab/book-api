@@ -1,26 +1,66 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import SearchBar from './SearchBar/SearchBar';
+import BookList from './BookList/BookList';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const key ='AIzaSyAJviY2cABNVjt30zCeJ9dhkWvYyipD7mk';
+function formatQuery(search){
+  return `https://www.googleapis.com/books/v1/volumes?q=${search.query}&printType=${search.printType}&filter=${search.bookType}&key=${key}`;
+
+}
+class App extends React.Component {
+  constructor(props){
+    super(props);
+    this.handleSearch = this.handleSearch.bind(this);
+    this.state = {
+      bookList: {
+        items: []
+      },
+      error: null
+    }
+  }
+  handleSearch(e, query) {
+    e.preventDefault();
+    console.log(query);
+    const url= formatQuery(query);
+    console.log(url);
+    
+    
+    fetch(url)
+    .then(response=> {
+      if (!response.ok){
+        throw new Error('Something went wrong, please try again');
+      }
+      return response;
+    })
+    .then(res=>res.json())
+    .then(data=> {
+      console.log(data);
+      this.setState({
+        bookList: data,
+        error: null
+      });
+    })
+    .catch(err=> {
+      this.setState({
+        error: err.message
+      });
+    });
+  }
+
+  render(){
+  
+    const error = this.state.error
+          ? <div className="error">{this.state.error}</div>
+          : "";
+    return (
+      <main className='App'>
+        <header>Google Book Search</header>
+        <SearchBar handleSearch={this.handleSearch}/>
+        {error}
+        <BookList books={this.state.bookList}/>
+      </main>
+    );
+  }
 }
 
 export default App;
